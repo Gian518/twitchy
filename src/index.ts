@@ -1,18 +1,59 @@
 /**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
+ *  .--..--..--..--..--..--..--..--..--..--..--..--..--. 
+ * / .. \.. \.. \.. \.. \.. \.. \.. \.. \.. \.. \.. \.. \
+ * \ \/\ `'\ `'\ `'\ `'\ `'\ `'\ `'\ `'\ `'\ `'\ `'\ \/ /
+ *  \/ /`--'`--'`--'`--'`--'`--'`--'`--'`--'`--'`--'\/ / 
+ *  / /\                                            / /\ 
+ * / /\ \   ______         _  __        __         / /\ \
+ * \ \/ /  /_  __/_    __ (_)/ /_ ____ / /  __ __  \ \/ /
+ *  \/ /    / /  | |/|/ // // __// __// _ \/ // /   \/ / 
+ *  / /\   /_/   |__,__//_/ \__/ \__//_//_/\_, /    / /\ 
+ * / /\ \                                 /___/    / /\ \
+ * \ \/ /                                          \ \/ /
+ *  \/ /                                            \/ / 
+ *  / /\.--..--..--..--..--..--..--..--..--..--..--./ /\ 
+ * / /\ \.. \.. \.. \.. \.. \.. \.. \.. \.. \.. \.. \/\ \
+ * \ `'\ `'\ `'\ `'\ `'\ `'\ `'\ `'\ `'\ `'\ `'\ `'\ `' /
+ *  `--'`--'`--'`--'`--'`--'`--'`--'`--'`--'`--'`--'`--' 
+ * 
+ * Hi! Welcome to Twitchy! This bot helps you manage your Twitch subscribers on your private Telegram group.
+ * Please, refer to the documentation for more details on how to use this bot.
+ * 
+ * This file is the entrypoint of the entire application. It sets up the bot and starts it.
+ * If you're not familiar with Cloudflare Workers, you can read more about it on the official website:
+ * - https://developers.cloudflare.com/workers/
+ * Need help with grammY framework? Check out the docs:
+ * - https://grammy.dev/
+ * 
  */
+
+import { webhookCallback } from "grammy"
+import { execute } from "./bot"
+import { getBot, saveEnv, saveRequest } from "./store"
+import { manageGroup } from "./groups"
+import { router } from "./router"
+import errorPage from "./pages/error"
+
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
-	},
-} satisfies ExportedHandler<Env>;
+		try {
+			saveEnv(env)
+			saveRequest(request)
+
+			await execute()
+			await manageGroup()
+			const response = await router()
+
+			const url = new URL(request.url)
+			if (request.url == url.origin + "/bot") {
+				return webhookCallback(getBot(), "cloudflare-mod")(request)
+			} else {
+				return response
+			}
+		} catch (error) {
+			console.log("Main Error:", error)
+			return new Response(errorPage('en'), { status: 500, headers: { "Content-Type": "text/html;charset=UTF-8" } })
+		}
+	}
+} satisfies ExportedHandler<Env>

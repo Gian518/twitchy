@@ -1,6 +1,7 @@
 {
-	"name": "telegram-auth-bot",
-	"version": "0.0.0",
+	"name": "twitchy",
+	"version": "1.0.0",
+	"description": "A Telegram bot to authenticate Twitch users and retrive their sub on a specific channel",
 	"private": true,
 	"scripts": {
 		"deploy": "wrangler deploy",
@@ -11,9 +12,14 @@
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.6.4",
-		"@cloudflare/workers-types": "^4.20250224.0",
+		"@types/node": "^22.13.9",
 		"typescript": "^5.5.2",
 		"vitest": "~2.1.9",
-		"wrangler": "^3.111.0"
+		"wrangler": "^4.0.0"
+	},
+	"dependencies": {
+		"@grammyjs/chat-members": "^1.2.0",
+		"@grammyjs/storage-free": "^2.5.0",
+		"grammy": "^1.35.0"
 	}
 }

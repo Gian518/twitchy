@@ -170,3 +170,7 @@ dist
 
 .dev.vars
 .wrangler/
+
+# OS specific
+*.DS_Store
+Thumbs.db
