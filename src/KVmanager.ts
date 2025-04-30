@@ -11,15 +11,16 @@ import { TwitchTokenResponse } from "./types"
 export const saveCredentials = async (tokenData: TwitchTokenResponse, chatId: string) => {
     const env = getEnv()
 
-    if (!env || !env.OAUTH_TOKEN || !env.OAUTH_REFRESH_TOKENS) {
+    if (!env || !env.OAUTH_TOKEN) {
         throw new Error("Env not initialized")
     }
 
     const accessToken = tokenData.access_token
     const refreshToken = tokenData.refresh_token
 
-    await env.OAUTH_TOKEN.put(chatId, accessToken)
-    await env.OAUTH_REFRESH_TOKENS.put(chatId, refreshToken)
+    // Store both access and refresh tokens in the same key reduces the number of KV operations
+    // and avoids the risk of reaching the rate limit of Cloudflare.
+    await env.OAUTH_TOKEN.put(chatId, accessToken + ' ' + refreshToken)
 
     return {
         accessToken,
@@ -34,12 +35,19 @@ export const getCredentials = async (chatId: string): Promise<{ accessToken: str
     const env = getEnv()
 
 
-    if (!env || !env.OAUTH_TOKEN || !env.OAUTH_REFRESH_TOKENS) {
+    if (!env || !env.OAUTH_TOKEN) {
         throw new Error("Env not initialized")
     }
 
-    const accessToken = await env.OAUTH_TOKEN.get(chatId) || ''
-    const refreshToken = await env.OAUTH_REFRESH_TOKENS.get(chatId) || ''
+    const tokens = await env.OAUTH_TOKEN.get(chatId)
+    if (!tokens) {
+        return {
+            accessToken: '',
+            refreshToken: ''
+        }
+    }
+
+    const [accessToken, refreshToken] = tokens.split(' ')
 
     return {
         accessToken,
