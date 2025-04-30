@@ -1,16 +1,25 @@
 import { type ChatMembersFlavor } from "@grammyjs/chat-members"
 import { Api, Bot, Context, RawApi } from "grammy"
 
-export type BotContext = Context & ChatMembersFlavor & I18nFlavor
-export type TelegramBot = Bot<BotContext, Api<RawApi>>
-
+// i18n specifics
 export type LocalesEnum = keyof typeof import("./locales/index.ts").default
 export type LocalesKey = keyof typeof import("./locales/index.ts").default[LocalesEnum]
 
+// Middleware
 export interface I18nFlavor {
+    /** Get the translation for the locale passed by Telegram */
     t: (key: LocalesKey, variables?: Record<string, any>) => string
 }
 
+export interface IBroadcasterFlavor {
+    /** Check if the user is the broadcaster */
+    isBroadcaster: () => boolean
+}
+
+export type BotContext = Context & ChatMembersFlavor & I18nFlavor & IBroadcasterFlavor
+export type TelegramBot = Bot<BotContext, Api<RawApi>>
+
+// Auth
 interface IOAuthLoginAuth {
     grantType: 'authorization_code'
     code: string
@@ -25,6 +34,7 @@ interface IOAuthLoginRefresh {
 
 export type IOAuthLogin = IOAuthLoginAuth | IOAuthLoginRefresh
 
+// Twitch API
 export interface TwitchTokenResponse {
     access_token: string
     expires_in: number

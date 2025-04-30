@@ -4,17 +4,12 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "telegram-auth-bot",
+  "name": "twitchy",
   "main": "src/index.ts",
   "compatibility_date": "2025-02-24",
   "observability": {
     "enabled": true
   },
-  /**
-   * Smart Placement
-   * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-   */
-  // "placement": { "mode": "smart" },
   /**
    * Bindings
    * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
@@ -33,33 +28,9 @@
       "preview_id": "e7d11bbfb35143ca8d89329e15ef55d1"
     },
     {
-      "binding": "OAUTH_REFRESH_TOKENS",
-      "id": "9bc69e19ce644f98b25ae728fe161d7c",
-      "preview_id": "9bc69e19ce644f98b25ae728fe161d7c"
+      "binding": "RECENTLY_EXPIRED",
+      "id": "179234945d8f43f79a1fb110152b083e",
+      "preview_id": "179234945d8f43f79a1fb110152b083e"
     },
-    {
-      "binding": "STARTUP_MESSAGES",
-      "id": "62306fe5754446598fc492ff90e09e42",
-      "preview_id": "62306fe5754446598fc492ff90e09e42"
-    }
   ]
-  /**
-   * Environment Variables
-   * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-   */
-  // "vars": { "MY_VARIABLE": "production_value" },
-  /**
-   * Note: Use secrets to store sensitive data.
-   * https://developers.cloudflare.com/workers/configuration/secrets/
-   */
-  /**
-   * Static Assets
-   * https://developers.cloudflare.com/workers/static-assets/binding/
-   */
-  // "assets": { "directory": "./public/", "binding": "ASSETS" },
-  /**
-   * Service Bindings (communicate between multiple Workers)
-   * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-   */
-  // "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
 }
