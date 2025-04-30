@@ -1,6 +1,6 @@
 import { Context, MiddlewareFn, NextFunction } from "grammy"
-import { BotContext, I18nFlavor, LocalesEnum, LocalesKey } from "./types"
-import locales from "./locales"
+import { BotContext, I18nFlavor, LocalesEnum, LocalesKey } from "../types"
+import locales from "../locales"
 
 /**
  * i18n middleware for grammY
@@ -31,7 +31,7 @@ export default ({ defaultLocale }: { defaultLocale: LocalesEnum }): MiddlewareFn
 
     return async (ctx: Context & I18nFlavor, next: NextFunction): Promise<void> => {
         /**
-         *  Get the translation for the locale passed by Telegram
+         * Get the translation for the locale passed by Telegram
          * @param key The key of the translation to get
          * @param variables The variables to replace in the translation
          * @returns The translated string
@@ -51,7 +51,11 @@ export default ({ defaultLocale }: { defaultLocale: LocalesEnum }): MiddlewareFn
  * @returns The translated string
  */
 export const translate = (locale: LocalesEnum, key: LocalesKey, variables?: Record<string, any>) => {
-    const translated = locales[locale][key]
+    let translated = locales[locale][key]
+    // Critical fallback to English in case the translation is empty in the given locale
+    if (translated == '') {
+        translated = locales['en'][key]
+    }
     if (variables) {
         return Object.keys(variables).reduce((acc, cur) => {
             return acc.replace(`{${cur}}`, variables[cur])

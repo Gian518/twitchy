@@ -1,4 +1,4 @@
-import { translate } from "./i18n"
+import { translate } from "./middlewares/i18n"
 import locales from "./locales"
 import { getBot } from "./store"
 import { LocalesEnum } from "./types"
@@ -18,12 +18,4 @@ export const commands = async () => {
         ]
         await bot.api.setMyCommands(commands, { language_code: locale })
     })
-
-    // English
-    // await bot.api.setMyCommands([
-    //     { command: "start", description: translate('en', 'commands.start') },
-    //     { command: "me", description: "Get information about your Twitch account" },
-    //     { command: "botstats", description: "Get stat info about the bot. ⚠️ Available for group creators only ⚠️" },
-    //     { command: "help", description: "Get help with the bot" }
-    // ], { language_code: 'en' })
 }

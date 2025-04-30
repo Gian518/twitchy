@@ -1,6 +1,6 @@
 import header from "./header"
 import { LocalesEnum } from "../types"
-import { translate } from "../i18n"
+import { translate } from "../middlewares/i18n"
 
 export default (lang: LocalesEnum) => {
     return `

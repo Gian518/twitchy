@@ -1,4 +1,4 @@
-import { translate } from "../i18n"
+import { translate } from "../middlewares/i18n"
 import { LocalesEnum } from "../types"
 import header from "./header"
 
