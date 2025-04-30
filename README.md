@@ -71,6 +71,7 @@ The project is organized into multiple files, each serving a specific purpose:
 - [ ] Cron trigger for daily subscription check
 - [ ] ~~i18n integration with [Internationalization plugin](https://grammy.dev/plugins/i18n)~~
 - [x] i18n custom middleware
+- [ ] /logout command
 - [ ] Document environment variables
 - [ ] Create a [Deploy with Workers button](https://developers.cloudflare.com/workers/tutorials/deploy-button/) for GitHub
 - [ ] A mini website for the _average user_ to deploy the Worker without any help by a developer
@@ -86,10 +87,9 @@ The project is organized into multiple files, each serving a specific purpose:
 
 - [@kowalsk7cc](https://github.com/kowalski7cc) for suggesting me to try Cloudflare Workers for this work.
 - [@frederic.henri](https://medium.com/@frederic.henri) for [this guide](https://medium.com/@frederic.henri/authenticate-your-users-on-3rd-party-services-using-oauth-within-your-telegram-bot-b0003764e83e) and [this guide](https://medium.com/@frederic.henri/conversation-telegram-bot-with-grammy-deployed-on-cloudflare-8f691515c365).
-&nbsp;
-&nbsp;
+
 ![Made in Europe logo](.github/images/eu.svg)
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+[GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/)
