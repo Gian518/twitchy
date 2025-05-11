@@ -5,6 +5,7 @@ Welcome to the Twitchy repository! This project is a Telegram bot designed to ma
 ## ⚠️ Actively under development ⚠️
 
 Even if the bot has some functionalities, it's still under development and is not currently ready for a production environment. I suggest you to wait a bit more, but you can still clone the repo and play with it.
+Note that the checkMembership method (inside scheduled.ts) **has to be rewritten**, since it's too heavy to run con Cloudflare Worker. **Do not use the current version on a production environment**.
 
 ## Features
 
@@ -65,6 +66,9 @@ The project is organized into multiple files, each serving a specific purpose:
 - **src/auth.ts**: Handles user first authentication and group invitations.
 - **src/KVmanager.ts**: Manages key-value storage operations.
 - **src/store.ts**: Provides utility functions to get environment variables and other configurations.
+- **src/middlewares/broadcaster.ts**: Custom middleware for grammY that checks if the user is the Twitch broadcaster
+- **src/middlewares/i18n.ts**: Custom localization middleware for grammY that doesn't require Node, the FS library or a server environment to run (which is a requirement for Cloudflare Workers)
+- **src/locales**: The folder that stores localization files in .ts format. The filename of a single language must use ISO 639-1 format.
 
 ## Todo list
 
@@ -75,6 +79,14 @@ The project is organized into multiple files, each serving a specific purpose:
 - [ ] Document environment variables
 - [ ] Create a [Deploy with Workers button](https://developers.cloudflare.com/workers/tutorials/deploy-button/) for GitHub
 - [ ] A mini website for the _average user_ to deploy the Worker without any help by a developer
+
+## Contributing
+
+Feel free to open a pull request if you want to contribute to the project. If you want to add a translation and you don't even know what a pull request is, send me a private message.
+
+## Donations 🇺🇦
+
+Currently, I'm not accepting any donations. If you feel generous and want to help someone, please consider to help Ukrainian people by donating some money or in any other useful way using [this official EU link](https://commission.europa.eu/topics/eu-solidarity-ukraine/helping-ukrainians-how-you-can-donate-and-engage_en).
 
 ## Credits
 
