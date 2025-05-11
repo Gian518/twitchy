@@ -7,6 +7,7 @@ export default {
 
     /** Commands **/
     // Start
+    "start.alreadyauthorized": "You are already authorized to access the group. Join us with this invitation link!\n<i>Note that the link is valid for three days and limited to one access.</i>",
     "start.msg": "Hi! Login with Twitch to access the group.\n<i>The link expires in 5 minutes</i>",
     "start.login": "🟣 Login with Twitch",
 
@@ -49,5 +50,11 @@ export default {
 
     /** Error page **/
     "error.title": "Uh oh!",
-    "error.message": "Something went wrong. Please try again later."
+    "error.message": "Something went wrong. Please try again later.",
+
+    /** Scheduled **/
+    "scheduled.todaytitle": "🧨 <b>Today's ban list:</b>\n",
+    "scheduled.nobanstoday": "No one to ban today. Hurray! 🍾",
+    "scheduled.warningtitle": "⚠️ <b>Users with expired subscriptions (three days maximum left to renew):</b>\n",
+    "scheduled.renewsub": "💳 Renew your subscription now!",
 }

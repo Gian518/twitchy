@@ -2,7 +2,7 @@ import { checkUserSubscription, getUsers, oauthLogin } from "./api"
 import { getBot, getEnv, getRequest } from "./store"
 import { saveCredentials } from "./KVmanager"
 import success from "./pages/success"
-import { translate } from "./i18n"
+import { translate } from "./middlewares/i18n"
 import { LocalesEnum } from "./types"
 
 /**
@@ -22,8 +22,9 @@ export const auth = async (): Promise<Response> => {
         return new Response('Missing code or state', { status: 400 })
     }
 
-    // Get chatId from KV
-    const chatId = await env.OAUTH_STATES.get(state) as string
+    // Get chat ID and message ID from KV
+    const mergedState = await env.OAUTH_STATES.get(state) as string
+    const [chatId, msgId] = mergedState.split(' ')
     if (!chatId) {
         return new Response('Invalid or expired chat', { status: 400 })
     }
@@ -33,18 +34,16 @@ export const auth = async (): Promise<Response> => {
 
     // Exchange code for tokens
     const tokenData = await oauthLogin({ grantType: 'authorization_code', code })
-    await saveCredentials(tokenData, chatId)
 
     // Get user info
-    const userResponse = await getUsers(chatId)
-    const user = userResponse[0]
+    const userResponse = await getUsers(chatId, undefined, tokenData.access_token)
+    const [user] = userResponse
 
     // Get user subscription
-    const subscription = await checkUserSubscription(chatId, user.id)
+    const subscription = await checkUserSubscription(chatId, user.id, tokenData.access_token)
 
     try {
         // Get startup message from KV to delete it
-        const msgId = await env.STARTUP_MESSAGES.get(chatId) as string
         if (msgId) {
             await bot.api.deleteMessage(chatId, parseInt(msgId))
         }
@@ -52,11 +51,12 @@ export const auth = async (): Promise<Response> => {
         // Silent fail if the message is already deleted or never existed
         console.log("Error deleting a startup message:", error)
     }
-    await env.STARTUP_MESSAGES.delete(chatId)
 
     const tgUser = await bot.api.getChatMember(env.GROUP_ID, parseInt(chatId))
     const userLanguage = tgUser.user.language_code as LocalesEnum || 'en'
     if (subscription) {
+        // Save user credentials in KV
+        await saveCredentials(tokenData, chatId)
         // Generate an invite link, limit to one user and valid for three days
         const link = await bot.api.createChatInviteLink(env.GROUP_ID, { expire_date: (Date.now() / 1000) + 259200, member_limit: 1 })
         await bot.api.sendMessage(chatId, translate(userLanguage, 'auth.success', { name: user.display_name }), {

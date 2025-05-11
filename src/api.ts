@@ -2,7 +2,7 @@
  * This file contains the API functions for interacting with Twitch's OAuth and user APIs.
  */
 
-import { getEnv } from "./store"
+import { getEnv, getRequest } from "./store"
 import { getCredentials, saveCredentials } from "./KVmanager"
 import { IOAuthLogin, TwitchSubscription, TwitchTokenResponse, TwitchTokenValidationResponse, TwitchUser } from "./types"
 
@@ -24,7 +24,9 @@ export const oauthLogin = async ({ grantType, code, refreshToken }: IOAuthLogin)
         body.append('code', code)
     }
     if (grantType == 'authorization_code') {
-        body.append('redirect_uri', env.OAUTH_REDIRECT_URI)
+        const request = getRequest()
+        const url = new URL(request.url)
+        body.append('redirect_uri', url.origin + '/api/auth/callback/twitch')
     }
     if (grantType == 'refresh_token') {
         body.append('refresh_token', refreshToken)
@@ -88,10 +90,10 @@ const baseUrl = 'https://api.twitch.tv/helix'
 /**
  * Get user info from Twitch API
  */
-export const getUsers = async (chatId: string, ids?: string[]): Promise<TwitchUser[]> => {
+export const getUsers = async (chatId: string, ids?: string[], specificToken?: string): Promise<TwitchUser[]> => {
     const env = getEnv()
 
-    const { accessToken } = await getTokens(chatId)
+    const { accessToken } = specificToken ? { accessToken: specificToken } : await getTokens(chatId)
     if (!accessToken) {
         return []
     }
@@ -118,10 +120,10 @@ export const getUsers = async (chatId: string, ids?: string[]): Promise<TwitchUs
 /**
  * Check user subscription to a broadcaster (channel)
  */
-export const checkUserSubscription = async (chatId: string, userId: string): Promise<TwitchSubscription | false> => {
+export const checkUserSubscription = async (chatId: string, userId: string, specificToken?: string): Promise<TwitchSubscription | false> => {
     const env = getEnv()
 
-    const { accessToken } = await getTokens(chatId)
+    const { accessToken } = specificToken ? { accessToken: specificToken } : await getTokens(chatId)
     if (!accessToken) {
         return false
     }

@@ -5,14 +5,17 @@ import { checkUserSubscription, getUsers } from "./api"
 import { BotContext } from "./types"
 import { ChatMember } from "grammy/types"
 import { commands } from "./commands"
-import i18n from "./i18n"
+import i18n from "./middlewares/i18n"
+import broadcaster from "./middlewares/broadcaster"
+import { getCredentials } from "./KVmanager"
 
 /**
  * Initial bot setup and webhook configuration
+ * @param noRequest - Skip the request handling for cron jobs and only initialize the bot
  */
-export const init = async () => {
+export const init = async (noRequest?: boolean) => {
     const env = getEnv()
-    const request = getRequest()
+    const request = !noRequest && getRequest()
 
     const bot = new Bot<BotContext>(env.TELEGRAM_BOT_TOKEN, {
         botInfo: {
@@ -27,13 +30,16 @@ export const init = async () => {
             has_main_web_app: false
         }
     })
-    const url = new URL(request.url)
-    bot.api.setWebhook(`${url.origin}/bot`, { allowed_updates: ['chat_member', 'message', 'chat_join_request', 'my_chat_member'] })
+    if (request && !noRequest) {
+        const url = new URL(request.url)
+        bot.api.setWebhook(`${url.origin}/bot`, { allowed_updates: ['chat_member', 'message', 'chat_join_request', 'my_chat_member', 'callback_query'] })
+    }
 
     /* Middlewares */
     const adapter = new MemorySessionStorage<ChatMember>()
     const localization = i18n({ defaultLocale: 'en' })
-    bot.use(chatMembers(adapter), localization)
+    const broadcasterMiddleware = broadcaster()
+    bot.use(chatMembers(adapter), localization, broadcasterMiddleware)
     saveBot(bot)
 
 
@@ -54,28 +60,38 @@ export const execute = async () => {
 
     /* Start the bot and generate an OAuth link for the user */
     bot.command("start", async (ctx) => {
+
         if (ctx.chat.type == 'private') {
-            const state = crypto.randomUUID()
             const chatId = ctx.chat.id.toString()
 
-            // Store state in KV with 5 minute expiration
-            await env.OAUTH_STATES.put(state, chatId, {
-                expirationTtl: 300
-            })
+            const { accessToken } = await getCredentials(ctx.chat.id.toString())
+            if (accessToken) {
+                const twitchResponse = await getUsers(chatId)
+                if (twitchResponse.length > 0) {
+                    const [twitchUser] = twitchResponse
+                    const sub = await checkUserSubscription(chatId, twitchUser.id)
+                    if (sub) {
+                        const link = await bot.api.createChatInviteLink(env.GROUP_ID, { expire_date: (Date.now() / 1000) + 259200, member_limit: 1 })
+                        await ctx.reply(ctx.t('start.alreadyauthorized'), {
+                            parse_mode: 'HTML',
+                            reply_markup: {
+                                inline_keyboard: [[{ text: ctx.t('auth.join'), url: link.invite_link }]],
+                            }
+                        })
+                        return
+                    }
+                }
+            }
+
+            const state = crypto.randomUUID()
 
             // Generate the Twitch OAuth URL
-            // WARNING! Do not add any other query parameters to the URL, as it will break the OAuth flow
-            // inside the router, since it checks for these exact parameters.
             const authUrl = new URL('https://id.twitch.tv/oauth2/authorize')
             authUrl.searchParams.append('client_id', env.TWITCH_CLIENT_ID)
-            authUrl.searchParams.append('redirect_uri', env.OAUTH_REDIRECT_URI)
+            authUrl.searchParams.append('redirect_uri', url.origin + '/api/auth/callback/twitch')
             authUrl.searchParams.append('response_type', 'code')
             authUrl.searchParams.append('scope', 'user:read:email user:read:subscriptions')
             authUrl.searchParams.append('state', state)
-
-            // Worker redirect URL - Check explaination in router.ts for more details
-            // const authUrl = new URL(url.origin + '/api/auth/redirect')
-            // authUrl.searchParams.append('twitchUrl', twitchUrl.toString())
 
             // Using webapp, instead of a classic URL, allows the user to login without leaving the Telegram app.
             // This is necessary because the Twitch app on Android does not handle redirects correctly, causing the OAuth flow to fail.
@@ -86,8 +102,10 @@ export const execute = async () => {
                 },
             })
 
-            // Store message ID for later deletion
-            await env.STARTUP_MESSAGES.put(chatId, msg.message_id.toString(), {
+            // Store state and startup message in KV with 5 minute expiration
+            // Using a single entry for chat ID and message ID decreases the number of KV operations
+            // and reduce the risk of reaching the rate limit of the KV store.
+            await env.OAUTH_STATES.put(state, chatId + ' ' + msg.message_id.toString(), {
                 expirationTtl: 300
             })
         }
@@ -106,7 +124,7 @@ export const execute = async () => {
         try {
             const twitchResponse = await getUsers(chatId)
             if (twitchResponse.length > 0) {
-                const twitchUser = twitchResponse[0]
+                const [twitchUser] = twitchResponse
                 const sub = await checkUserSubscription(chatId, twitchUser.id)
 
                 let subInfo = ''
@@ -143,13 +161,12 @@ export const execute = async () => {
                 await bot.api.editMessageText(chatId, msg.message_id, ctx.t('me.notlogged'))
             }
         } catch (error) {
-            console.error("Error in /me command:", error)
+            console.log("Error in /me command:", error)
             await bot.api.editMessageText(chatId, msg.message_id, ctx.t('me.error'))
         }
     })
 
     bot.command("help", async (ctx) => {
-        ctx.message?.message_id || 0
         await ctx.reply(ctx.t('help.msg'), { parse_mode: 'HTML' })
     })
 
@@ -215,8 +232,6 @@ export const execute = async () => {
         reply += '\n\n<i>KV namespaces</i>'
         reply += '\nOAUTH_STATES: ' + (!!env.OAUTH_STATES ? '✅' : '❌')
         reply += '\nOAUTH_TOKEN: ' + (!!env.OAUTH_TOKEN ? '✅' : '❌')
-        reply += '\nOAUTH_REFRESH_TOKENS: ' + (!!env.OAUTH_REFRESH_TOKENS ? '✅' : '❌')
-        reply += '\nSTARTUP_MESSAGES: ' + (!!env.STARTUP_MESSAGES ? '✅' : '❌')
 
         // Hook info
         const webhookInfo = await bot.api.getWebhookInfo()

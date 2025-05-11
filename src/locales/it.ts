@@ -6,6 +6,7 @@ export default {
     "commands.help": "Ottieni aiuto per il bot",
 
     // Start
+    "start.alreadyauthorized": "Sei già autorizzato ad accedere al gruppo. Unisciti a noi con questo link di invito!\n<i>Nota che il link è valido per tre giorni e limitato a un accesso.</i>",
     "start.msg": "Ciao! Accedi con Twitch per entrare nel gruppo.\n<i>Il link scade in 5 minuti</i>",
     "start.login": "🟣 Login con Twitch",
 
@@ -48,5 +49,11 @@ export default {
 
     /** Error page **/
     "error.title": "Oh no!",
-    "error.message": "Qualcosa è andato storto. Riprova più tardi."
+    "error.message": "Qualcosa è andato storto. Riprova più tardi.",
+
+    /** Scheduled **/
+    "scheduled.todaytitle": "🧨 <b>Lista dei ban di oggi:</b>\n",
+    "scheduled.nobanstoday": "Nessuno da bannare oggi. Yay! 🍾",
+    "scheduled.warningtitle": "⚠️ <b>Utenti con abbonamenti scaduti (tre giorni massimi per rinnovare):</b>\n",
+    "scheduled.renewsub": "💳 Rinnova il tuo abbonamento ora!",
 }
