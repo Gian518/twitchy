@@ -32,5 +32,10 @@
       "id": "179234945d8f43f79a1fb110152b083e",
       "preview_id": "179234945d8f43f79a1fb110152b083e"
     },
-  ]
+  ],
+  "triggers": {
+    "crons": [
+      "0 0 * * *" // Runs at midnight UTC every day. Change this value if you prefer a different time.
+    ]
+  }
 }

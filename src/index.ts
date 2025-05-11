@@ -28,11 +28,12 @@
  */
 
 import { webhookCallback } from "grammy"
-import { execute } from "./bot"
+import { execute, init } from "./bot"
 import { getBot, saveEnv, saveRequest } from "./store"
 import { manageGroup } from "./groups"
 import { router } from "./router"
 import errorPage from "./pages/error"
+import { checkMemberships } from "./scheduled"
 
 
 export default {
@@ -52,8 +53,22 @@ export default {
 				return response
 			}
 		} catch (error) {
-			console.log("Main Error:", error)
+			console.log("Fetch: Main Error:", error)
 			return new Response(errorPage('en'), { status: 500, headers: { "Content-Type": "text/html;charset=UTF-8" } })
+		}
+	},
+
+	async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+		if (controller.cron === "0 0 * * *") {
+			console.log("Running scheduled task")
+			try {
+				saveEnv(env)
+				await init()
+
+				await checkMemberships()
+			} catch (error) {
+				console.log("Scheduled: Main Error:", error)
+			}
 		}
 	}
 } satisfies ExportedHandler<Env>
